@@ -43,7 +43,7 @@ No public package publication or upstream PR is implied by this prototype.
 ## Validation and limits
 
 The generated fixture tests exercise pitch/duration, capo, voices, tuplets,
-repeats, percussion identity, raw effect chains, XML escaping, deterministic
+repeats, meter-aware beam groups/secondary hooks/source beam overrides, percussion identity, raw effect chains, XML escaping, deterministic
 output, archive expansion guards, checksums and both GP ZIP descriptor orders.
 Generate an original application fixture with `npx tsx scripts/fixture.ts PATH`.
 
@@ -68,3 +68,7 @@ renderer, synth and platform code except three audited shared enum/constant file
 No upstream source changes or unchecked partial Settings casts are needed.
 Load it in an isolated worker on demand; byte limits alone cannot impose a CPU
 deadline on synchronous parsing, so the application must impose a worker deadline.
+
+MusicXML includes explicit beam groups per voice and measure. Source custom groups
+and beam breaks/joins take priority; meter supplies defaults. Rests/gaps and
+grace boundaries split groups. Beams do not change note timing.

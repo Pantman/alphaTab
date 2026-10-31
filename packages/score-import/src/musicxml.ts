@@ -11,6 +11,7 @@ import { HarmonicType } from '@coderline/alphatab/model/HarmonicType';
 import { PercussionMapper } from '@coderline/alphatab/model/PercussionMapper';
 import type { ImportDiagnostic } from './types';
 import { ScoreImportError } from './types';
+import { planBeams } from './beaming';
 
 const divisions = MidiUtils.QuarterTime;
 const noteTypes: Record<number, string> = { [-4]: 'long', [-2]: 'breve', 1: 'whole', 2: 'half', 4: 'quarter', 8: 'eighth',
@@ -126,6 +127,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                     firstVoice = false;
                     const voiceNumber = s * 4 + (voice?.index ?? 0) + 1;
                     let position = 0;
+                    const beams = voice ? planBeams(voice) : new Map<Beat, string>();
                     for (const beat of voice?.beats ?? []) {
                         if (beat.isEmpty) continue;
                         const grace = beat.graceType !== GraceType.None;
@@ -145,7 +147,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                             previousDynamic = beat.dynamics;
                         }
                         if (beat.isRest) body += `<note><rest/>${element('duration', beat.displayDuration)}${element('voice', voiceNumber)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}${element('staff', s + 1)}</note>`;
-                        else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report); });
+                        else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report, n === 0 ? beams.get(beat) ?? '' : ''); });
                         if (!grace) position = Math.max(position, beat.displayStart + beat.displayDuration);
                     }
                     if (position < duration) body += `<forward><duration>${duration - position}</duration><voice>${voiceNumber}</voice><staff>${s + 1}</staff></forward>`;
@@ -167,7 +169,7 @@ function timeModification(beat: Beat): string {
 
 type Report = (severity: ImportDiagnostic['severity'], code: string, message: string, partId?: string, measure?: number) => void;
 
-function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, voice: number, chord: boolean, partId: string, measure: number, report: Report): string {
+function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, voice: number, chord: boolean, partId: string, measure: number, report: Report, beams: string): string {
     const grace = beat.graceType !== GraceType.None;
     // MusicXML prebends describe the approach to the starting pitch. The pitch itself must already include it.
     const previousPoints = note.bendOrigin?.bendPoints;
@@ -192,7 +194,7 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     if (!noteTypes[beat.duration]) throw new ScoreImportError('unsupported-duration', 'Unknown written note duration.');
     body += `<instrument id="${partId}-${note.isPercussion ? percussionId(note.realValue) : 'I'}"/>${element('voice', voice)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}`;
     if (note.isDead || note.isGhost) body += `<notehead${note.isGhost ? ' parentheses="yes"' : ''}>${note.isDead ? 'x' : 'normal'}</notehead>`;
-    body += element('staff', staffNumber);
+    body += element('staff', staffNumber) + beams;
     let technical = '';
     if (note.isStringed && !note.isPercussion) {
         if (Number.isInteger(note.fret) && note.fret >= 0 && note.string >= 1 && note.string <= staff.tuning.length) {

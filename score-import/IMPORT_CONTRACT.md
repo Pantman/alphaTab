@@ -56,3 +56,12 @@ synthetic fixtures, archive guards and documented limitations are experimental.
 `practiceReady` means no known blocking conversion diagnostic; it does not certify
 the original score or establish complete playback/engraving fidelity.
 GP3/4/5 and GPX are not yet accepted by this package.
+
+## Beam engraving
+
+Export explicit MusicXML beam groups per voice and measure, without changing
+pitch or timing. Honor source beam breaks/joins and custom meter groups. Otherwise
+use meter-based groups (quarter beats in simple meter, dotted beats in compound
+meter). Keep full tuplets together; break at rests, gaps and grace/main boundaries.
+Emit secondary beams and hooks for mixed durations, once per chord. Grace groups
+remain separate. Beams are engraving, not playback or practice semantics.
