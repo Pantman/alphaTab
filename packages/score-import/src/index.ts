@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import { GpifParser } from '@coderline/alphatab/importer/GpifParser';
-import { Settings } from '@coderline/alphatab/Settings';
+import { ImportSettings } from './settings';
 import { Logger } from '@coderline/alphatab/Logger';
 import { LogLevel } from '@coderline/alphatab/LogLevel';
 import { readGpif, importLimits } from './archive';
@@ -9,6 +9,8 @@ import { writeMusicXml } from './musicxml';
 import { ScoreImportError, type ImportedScore, type ImportOptions, type ImportDiagnostic } from './types';
 export * from './types';
 
+declare const __SCORE_IMPORT_VERSION__: string;
+const importerVersion = typeof __SCORE_IMPORT_VERSION__ === 'string' ? __SCORE_IMPORT_VERSION__ : 'development';
 declare const __SCORE_IMPORT_REVISION__: string;
 const sourceRevision = typeof __SCORE_IMPORT_REVISION__ === 'string' ? __SCORE_IMPORT_REVISION__ : 'development';
 
@@ -23,7 +25,7 @@ export async function importScore(input: Uint8Array, _options: ImportOptions = {
     try {
         const gpif = readGpif(bytes);
         const parser = new GpifParser();
-        const settings = new Settings();
+        const settings = new ImportSettings();
         settings.importer.maxDecodingBufferSize = 16 * 1024 * 1024;
         // Parsing is synchronous. Restore shared logging before the first await so
         // concurrent imports cannot capture each other's diagnostics or host logging.
@@ -46,7 +48,7 @@ export async function importScore(input: Uint8Array, _options: ImportOptions = {
         return { musicXml, metadata, diagnostics, practiceReady: !diagnostics.some(d => d.severity === 'error'),
             provenance: { schema: 'score-import.provenance.v1', format: 'gp', sourceVersion: version,
                 sourceSha256: [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join(''),
-                importerVersion: '0.1.0', sourceRevision } };
+                importerVersion, sourceRevision } };
     } catch (error) {
         if (error instanceof ScoreImportError) throw error;
         throw new ScoreImportError('invalid-score', `Unable to import Guitar Pro score: ${error instanceof Error ? error.message : String(error)}`);

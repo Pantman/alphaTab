@@ -1,12 +1,23 @@
 {
   "name": "@pantman/score-import",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless Guitar Pro to MusicXML conversion with source metadata and diagnostics",
   "type": "module",
   "license": "MPL-2.0",
   "private": true,
-  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "files": ["dist", "LICENSE", "LICENSE.header", "NOTICE", "README.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "LICENSE.header",
+    "NOTICE",
+    "README.md"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",

@@ -14,6 +14,7 @@ import { importScore, ScoreImportError } from '../src/index';
 import { readGpif, importLimits } from '../src/archive';
 import { GpifParser } from '@coderline/alphatab/importer/GpifParser';
 import { Logger } from '@coderline/alphatab/Logger';
+import { ImportSettings } from '../src/settings';
 import { LogLevel } from '@coderline/alphatab/LogLevel';
 
 function makeGp(tex = '\\title "Import fixture" \\tempo 96 . :4 0.6 2.6 3.6 0.5 | 0.6.4') {
@@ -67,6 +68,11 @@ function readOutput(xml: string) {
 }
 
 describe('score-import', () => {
+    it('fails explicitly if a reader crosses the audited headless settings boundary', () => {
+        const settings = new ImportSettings();
+        expect(() => settings.player).toThrow(/unexpectedly requires player/);
+        expect(() => settings.display).toThrow(/unexpectedly requires display/);
+    });
     it('converts a generated guitar fixture headlessly and preserves sounding pitch, duration and fingering', async () => {
         expect(typeof document).toBe('undefined');
         const bytes = makeGp();

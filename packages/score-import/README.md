@@ -61,8 +61,10 @@ On-beat grace notes, navigation, swing and measure-repeat shorthand block practi
 Articulations such as palm mute/let ring, pedals and whammy are diagnosed but
 not reproduced in audio. Enharmonic spelling and engraving are normalized.
 
-The unminified bundle is approximately 2.7 MB: alphaTab's `Settings` transitively
-includes rendering/environment classes, although this entry does not initialize
-them. Load it in an isolated worker on demand; a smaller import context is
-future work. The application must impose a worker deadline because byte limits
-alone cannot impose a CPU deadline on synchronous source parsing.
+The unminified import bundle is approximately 416 KB. `ImportSettings` implements
+alphaTab's full Settings type while constructing only notation/importer settings;
+access to renderer/player subsystems fails explicitly. A build graph guard rejects
+renderer, synth and platform code except three audited shared enum/constant files.
+No upstream source changes or unchecked partial Settings casts are needed.
+Load it in an isolated worker on demand; byte limits alone cannot impose a CPU
+deadline on synchronous parsing, so the application must impose a worker deadline.
