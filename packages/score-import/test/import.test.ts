@@ -169,6 +169,7 @@ describe('score-import', () => {
         const output = readOutput(result.musicXml);
         expect(result.practiceReady).toBe(true);
         expect(result.musicXml).toContain('<capo>2</capo>');
+        expect(result.musicXml).toContain('<words>Capo 2</words>');
         expect(result.musicXml).toContain('<actual-notes>3</actual-notes><normal-notes>2</normal-notes>');
         expect(output.masterBars.map(b => [b.isRepeatStart, b.repeatCount])).toEqual(source.score.masterBars.map(b => [b.isRepeatStart, b.repeatCount]));
         const summary = (score: typeof output) => score.tracks[0].staves[0].bars.map(bar => bar.voices.filter(v => !v.isEmpty).map(v => v.beats.map(b => [b.displayStart, b.displayDuration, b.notes.map(n => n.realValue)])));

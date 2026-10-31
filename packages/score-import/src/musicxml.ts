@@ -102,6 +102,9 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
             });
             attributes += '</attributes>';
             let body = attributes;
+            if (m === 0) track.staves.forEach((staff, s) => {
+                if (staff.capo > 0 && !staff.isPercussion) body += `<direction><direction-type>${element('words', `Capo ${staff.capo}`)}</direction-type>${element('staff', s + 1)}</direction>`;
+            });
             if (master.section) body += `<direction><direction-type>${element('rehearsal', master.section.text)}</direction-type></direction>`;
             for (const tempo of master.tempoAutomations) {
                 if (tempo.isLinear) report('error', 'linear-tempo', 'Continuous tempo ramps are not yet converted.', partId, measure);
