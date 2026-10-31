@@ -72,3 +72,9 @@ deadline on synchronous parsing, so the application must impose a worker deadlin
 MusicXML includes explicit beam groups per voice and measure. Source custom groups
 and beam breaks/joins take priority; meter supplies defaults. Rests/gaps and
 grace boundaries split groups. Beams do not change note timing.
+
+Beat annotations and lyrics are escaped and preserved with source voice/staff
+scope. P.M./let-ring instructions use words plus standard MusicXML dashes, split
+at measure boundaries, rests, gaps and changes of affected strings. Partial
+chords name affected strings. These visual instructions do not apply audio DSP;
+renderers that ignore direction dashes need their own drawing support.

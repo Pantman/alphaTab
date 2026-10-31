@@ -12,6 +12,7 @@ import { PercussionMapper } from '@coderline/alphatab/model/PercussionMapper';
 import type { ImportDiagnostic } from './types';
 import { ScoreImportError } from './types';
 import { planBeams } from './beaming';
+import { planInstructions } from './instructions';
 
 const divisions = MidiUtils.QuarterTime;
 const noteTypes: Record<number, string> = { [-4]: 'long', [-2]: 'breve', 1: 'whole', 2: 'half', 4: 'quarter', 8: 'eighth',
@@ -128,6 +129,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                     const voiceNumber = s * 4 + (voice?.index ?? 0) + 1;
                     let position = 0;
                     const beams = voice ? planBeams(voice) : new Map<Beat, string>();
+                    const instructions = voice ? planInstructions(voice, s + 1, voiceNumber, `${partId}-${m}-${voiceNumber}`, xmlText) : undefined;
                     for (const beat of voice?.beats ?? []) {
                         if (beat.isEmpty) continue;
                         const grace = beat.graceType !== GraceType.None;
@@ -146,8 +148,10 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                             body += `<direction><direction-type><dynamics><${dynamics[beat.dynamics]}/></dynamics></direction-type><staff>${s + 1}</staff></direction>`;
                             previousDynamic = beat.dynamics;
                         }
+                        body += instructions?.get(beat)?.before ?? '';
                         if (beat.isRest) body += `<note><rest/>${element('duration', beat.displayDuration)}${element('voice', voiceNumber)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}${element('staff', s + 1)}</note>`;
                         else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report, n === 0 ? beams.get(beat) ?? '' : ''); });
+                        body += instructions?.get(beat)?.after ?? '';
                         if (!grace) position = Math.max(position, beat.displayStart + beat.displayDuration);
                     }
                     if (position < duration) body += `<forward><duration>${duration - position}</duration><voice>${voiceNumber}</voice><staff>${s + 1}</staff></forward>`;
@@ -234,5 +238,8 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     const articulations = articulation + (note.isStaccato ? '<staccato/>' : '');
     body += `<notations>${tied}${slides}${articulations ? `<articulations>${articulations}</articulations>` : ''}${technical ? `<technical>${technical}</technical>` : ''}</notations>`;
     if (note.isPalmMute || note.isLetRing || note.vibrato || note.trillValue >= 0) report('warning', 'note-performance', 'Palm mute, let ring, vibrato or trill playback needs application interpretation.', partId, measure);
+    if (!chord) beat.lyrics?.forEach((text, verse) => {
+        if (text) body += `<lyric number="${verse + 1}">${element('text', text)}</lyric>`;
+    });
     return `<note>${body}</note>`;
 }

@@ -65,3 +65,15 @@ use meter-based groups (quarter beats in simple meter, dotted beats in compound
 meter). Keep full tuplets together; break at rests, gaps and grace/main boundaries.
 Emit secondary beams and hooks for mixed durations, once per chord. Grace groups
 remain separate. Beams are engraving, not playback or practice semantics.
+
+## Performance instructions and text
+
+Preserve beat text as escaped, voice/staff-scoped MusicXML words at its source
+onset. Export P.M. and let-ring instructions with standard words/dashes, grouped
+over contiguous marked beats, bounded by measure, voice, rests and timing gaps.
+Repeat labels at measure boundaries so renderers can reserve their layout rows
+and display continuations after reflow. Partial-chord instructions name the
+affected strings rather than implying the entire chord. Single notes retain an
+instruction; before-beat grace instructions do not extend into main-note spans.
+Lyrics are emitted once per chord with verse numbers and escaped text. These
+notation additions do not change pitch, duration, practice targets or audio DSP.
