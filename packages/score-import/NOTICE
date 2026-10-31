@@ -1,0 +1,11 @@
+score-import is an extension of alphaTab, licensed under MPL-2.0.
+Copyright notices and additional third-party license notices are retained in
+LICENSE and LICENSE.header. Both must accompany distribution.
+
+Upstream: https://github.com/CoderLine/alphaTab
+Fork and corresponding source: https://github.com/Pantman/alphaTab
+Build provenance: dist/build.json. Source maps include the bundled source.
+
+No soundfonts, scores from the private local corpus, or renderer assets are
+included in this package. Users of a distributed build must be told where to
+obtain its corresponding MPL-covered source.

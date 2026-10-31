@@ -1,9 +1,8 @@
 # Score import extension
 
 This fork preserves alphaTab's repository layout and history. Format import and conversion
-planning material lives here; runtime conversion code will live
-in an additive workspace package, `packages/score-import`, once the first
-import slice is implemented. No converter is implemented by this setup commit.
+contracts live here. The experimental implementation is an additive workspace
+package, [`packages/score-import`](../packages/score-import/README.md).
 
 ## Boundary
 
@@ -21,8 +20,9 @@ alphaTab readers over copied or rewritten parsers.
 
 See [the import contract](IMPORT_CONTRACT.md) and [upstream baseline](upstream.json).
 
-The proposed public result is `ImportedScore`: MusicXML, structured metadata,
-diagnostics and provenance. The concrete TypeScript API is not implemented yet.
+The public result is `ImportedScore`: MusicXML, structured metadata, diagnostics
+and provenance. The v0.1 prototype accepts modern `.gp` only; other formats
+remain future work.
 
 ## Keeping the fork maintainable
 

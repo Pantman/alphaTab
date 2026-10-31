@@ -1,4 +1,4 @@
-# Import behavior contract (proposed v1)
+# Import behavior contract (v1 prototype)
 
 The importer is a deterministic byte-to-data operation. It does not render,
 play audio, fetch remote resources or mutate application state.
@@ -51,5 +51,8 @@ XML and readable rendering alone do not demonstrate musical equivalence.
 
 ## Current status
 
-This is a setup contract, not a claim of working conversion. The proposed result type is `ImportedScore`. The initial
-implementation will establish its concrete TypeScript API and fixture suite.
+`packages/score-import` implements the modern `.gp` slice. Its TypeScript API,
+synthetic fixtures, archive guards and documented limitations are experimental.
+`practiceReady` means no known blocking conversion diagnostic; it does not certify
+the original score or establish complete playback/engraving fidelity.
+GP3/4/5 and GPX are not yet accepted by this package.
