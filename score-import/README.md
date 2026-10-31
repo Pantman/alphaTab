@@ -1,16 +1,17 @@
-# MusicMaster import extension
+# Score import extension
 
-This fork preserves alphaTab's repository layout and history. MusicMaster-owned
-planning and integration material lives here; runtime conversion code will live
-in an additive workspace package, `packages/musicmaster-import`, once the first
+This fork preserves alphaTab's repository layout and history. Format import and conversion
+planning material lives here; runtime conversion code will live
+in an additive workspace package, `packages/score-import`, once the first
 import slice is implemented. No converter is implemented by this setup commit.
 
 ## Boundary
 
 Guitar Pro bytes -> alphaTab score model + original-format metadata ->
-MusicXML + MusicMaster metadata + explicit conversion diagnostics.
+MusicXML + structured source metadata + explicit conversion diagnostics.
 
-OSMD remains MusicMaster's renderer. The importer must not initialize alphaTab's
+The importer is independent of the consuming application and its renderer.
+It must not initialize alphaTab's
 UI, renderer, workers, player, or audio engine. Parsing may use shared model code;
 we will measure bundle dependencies before claiming a standalone import bundle.
 
@@ -20,26 +21,29 @@ alphaTab readers over copied or rewritten parsers.
 
 See [the import contract](IMPORT_CONTRACT.md) and [upstream baseline](upstream.json).
 
+The proposed public result is `ImportedScore`: MusicXML, structured metadata,
+diagnostics and provenance. The concrete TypeScript API is not implemented yet.
+
 ## Keeping the fork maintainable
 
 - `upstream` is CoderLine/alphaTab; `origin` is Pantman/alphaTab.
-- Keep upstream `develop` as the baseline; work on `codex/musicmaster-import`.
+- Keep upstream `develop` as the baseline; work on `codex/score-import`.
 - Put our additions in separate files/packages. Make necessary upstream fixes
   as separate commits, with regression tests, so they can be offered upstream.
 - Avoid renaming upstream packages, formatting unrelated files, or rewriting
-  repository-wide build configuration to suit MusicMaster.
+  repository-wide build configuration to suit a consuming application.
 - Record each deliberately adopted upstream revision in `upstream.json`.
 - Integrate upstream by merge, preserving history:
 
 ```sh
 git fetch upstream
-git switch codex/musicmaster-import
+git switch codex/score-import
 git merge upstream/develop
 ```
 
 After a merge, run importer regressions, our conversion fidelity tests, package
-build/typecheck, and MusicMaster's import/render/timeline checks before updating
-the app's pinned package revision. Do not use a floating Git branch in releases.
+build/typecheck, and consuming applications' import/render/timeline checks before updating
+a consuming application's pinned package revision. Do not use a floating Git branch in releases.
 
 ## Implementation slices
 
@@ -51,16 +55,17 @@ the app's pinned package revision. Do not use a floating Git branch in releases.
    unsupported musical constructs until supported or explicitly diagnosed.
 4. Add techniques, repeats, tempo changes and percussion, comparing semantic
    results with source fixtures and an independent converter.
-5. Integrate the pinned package into MusicMaster's transactional file loading,
-   persistence, part projection, score sharing and native file pickers.
-6. Add legacy readers and proven sound mappings incrementally.
+5. Validate the import result in a consuming application, including persistence,
+   part projection and score sharing. Application-specific DSP mappings stay
+   in the application, outside this package.
+6. Add legacy readers incrementally.
 
 ## Licensing and upstream contributions
 
 Retain the upstream MPL-2.0 license and all applicable third-party notices. Treat
 our import extension as MPL-2.0 too, avoiding ambiguity when adapting upstream
 code. Release source corresponding to each distributed importer build and link
-it from MusicMaster's open-source notices. Soundbank assets and score fixtures
+it from consuming applications' open-source notices. Soundbank assets and score fixtures
 need their own rights review; a code license does not license song content.
 
 Future submissions to CoderLine/alphaTab must follow [AGENTS.md](../AGENTS.md)

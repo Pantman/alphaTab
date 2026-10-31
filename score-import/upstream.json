@@ -1,5 +1,5 @@
 {
-  "schema": "musicmaster.alphatab-upstream.v1",
+  "schema": "score-import.alphatab-upstream.v1",
   "repository": "https://github.com/CoderLine/alphaTab",
   "branch": "develop",
   "commit": "54d916b1d67dd7baa8b58ee1d1727ad3dfdbf376"

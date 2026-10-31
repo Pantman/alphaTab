@@ -1,11 +1,11 @@
 # Import behavior contract (proposed v1)
 
 The importer is a deterministic byte-to-data operation. It does not render,
-play audio, fetch remote resources or mutate MusicMaster application state.
+play audio, fetch remote resources or mutate application state.
 
 ## Successful result
 
-- MusicXML score-partwise text, consumed by MusicMaster's existing pipeline.
+- MusicXML score-partwise text, consumed by existing MusicXML pipelines.
 - Versioned metadata containing source format/version, source hash, importer
   revision and a mapping from original track IDs to MusicXML part IDs. Names
   and current selection order are not identities. One source track may map to
@@ -16,14 +16,15 @@ play audio, fetch remote resources or mutate MusicMaster application state.
 - Structured diagnostics distinguishing unsupported musical data, preserved
   but unapplied sound settings, and deliberately approximated mappings.
 
-Preserve source bytes in MusicMaster's score package so later extraction can
+The consuming application retains original source bytes so later extraction can
 recover fields not understood by this importer version. Do not embed opaque
-JSON in arbitrary MusicXML nodes and assume OSMD will preserve it.
+JSON in arbitrary MusicXML nodes and assume renderers will preserve it.
 
 ## Sound interpretation
 
 Metadata applies to all instruments, including guitar, bass, drums and keys.
-Only verified mappings affect playback. Unknown parameter arrays remain opaque;
+Playback mappings belong to the consuming application, not this importer.
+Unknown parameter arrays remain opaque;
 an amp's normalized control value must not be assigned directly to a different
 DSP model simply because its range is similar. Preserve all sound definitions
 and timed sound changes, not just the first/default sound on a track.
@@ -50,5 +51,5 @@ XML and readable rendering alone do not demonstrate musical equivalence.
 
 ## Current status
 
-This is a setup contract, not a claim of working conversion. The initial
-implementation will establish the concrete TypeScript API and fixture suite.
+This is a setup contract, not a claim of working conversion. The proposed result type is `ImportedScore`. The initial
+implementation will establish its concrete TypeScript API and fixture suite.
