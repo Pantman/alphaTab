@@ -185,9 +185,11 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     if (note.isPercussion) {
         const art = PercussionMapper.getArticulation(note);
         const midi = note.realValue;
-        if (!validMidi(midi)) report('error', 'unresolved-percussion', 'A percussion note has no resolved MIDI identity; its visual placeholder must not become a practice target.', partId, measure);
+        if (!validMidi(midi)) report('warning', 'unresolved-percussion', 'An unidentified percussion entry is retained as a visual placeholder only; omit it from playback and practice targets.', partId, measure);
         // Percussion identity comes from the score-instrument, independently of its visual position.
-        const diatonic = art ? 39 - art.staffLine : 35;
+        // G5 is the generic placeholder at the source staffLine=0 position.
+        // Its display position never supplies a MIDI identity.
+        const diatonic = art ? 39 - art.staffLine : 39;
         const step = ['C', 'D', 'E', 'F', 'G', 'A', 'B'][((diatonic % 7) + 7) % 7];
         body += `<unpitched><display-step>${step}</display-step><display-octave>${Math.floor(diatonic / 7)}</display-octave></unpitched>`;
         if (!art) report('warning', 'percussion-display', 'A percussion note uses a generic visual staff position.', partId, measure);

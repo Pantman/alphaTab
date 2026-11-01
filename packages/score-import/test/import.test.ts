@@ -184,12 +184,14 @@ describe('score-import', () => {
         expect(readOutput(result.musicXml).tracks[0].staves[0].bars[0].voices[0].beats.map(b => b.notes[0].realValue)).toEqual([49, 40, 37, 38]);
     });
 
-    it('blocks unknown percussion and invalid frets instead of inventing practice targets', async () => {
+    it('retains silent unknown percussion while still blocking invalid frets', async () => {
         const percussion = rewriteGp(makeGp('\\instrument "percussion" . 30'), xml => xml.replace(/<InstrumentArticulation>\d+<\/InstrumentArticulation>/g, '<InstrumentArticulation>-1</InstrumentArticulation>'));
         const drumResult = await importScore(percussion);
-        expect(drumResult.practiceReady).toBe(false);
-        expect(drumResult.diagnostics).toContainEqual(expect.objectContaining({ code: 'unresolved-percussion', severity: 'error' }));
-        expect(drumResult.musicXml).not.toContain('<midi-unpitched>0</midi-unpitched>');
+        expect(drumResult.practiceReady).toBe(true);
+        expect(drumResult.diagnostics).toContainEqual(expect.objectContaining({ code: 'unresolved-percussion', severity: 'warning' }));
+        expect(drumResult.musicXml).not.toContain('<midi-unpitched>');
+        expect(drumResult.musicXml).toContain('<unpitched><display-step>G</display-step><display-octave>5</display-octave></unpitched>');
+        expect(drumResult.musicXml).toContain('<instrument id="P1-UnknownPercussion"/>');
         const fret = await importScore(rewriteGp(makeGp(), xml => {
             const doc = new XmlDocument(); doc.parse(xml);
             doc.firstElement!.findChildElement('Notes')!.firstElement!.findChildElement('Properties')!
@@ -199,6 +201,29 @@ describe('score-import', () => {
         expect(fret.practiceReady).toBe(false);
         expect(fret.diagnostics).toContainEqual(expect.objectContaining({ code: 'invalid-fingering' }));
         expect(fret.musicXml).not.toContain('<fret>-2</fret>');
+    });
+
+    it('keeps known drum hits, chords and timing beside unidentified entries without a MIDI fallback', async () => {
+        const original = makeGp('\\instrument "percussion" . :4 (30 31) 33 34 30');
+        const bytes = rewriteGp(original, xml => {
+            const doc = new XmlDocument(); doc.parse(xml);
+            doc.firstElement!.findChildElement('Notes')!.firstElement!.findChildElement('InstrumentArticulation')!.innerText = '-1';
+            return doc.toFormattedString();
+        });
+        const result = await importScore(bytes);
+        expect(result.practiceReady).toBe(true);
+        expect(result.diagnostics.filter(d => d.severity === 'error')).toEqual([]);
+        const doc = new XmlDocument(); doc.parse(result.musicXml);
+        const list = doc.firstElement!.findChildElement('part-list')!.firstElement!;
+        const mappings = list.childElements().filter(n => n.localName === 'midi-instrument');
+        expect(mappings.some(n => n.getAttribute('id') === 'P1-UnknownPercussion')).toBe(false);
+        expect(mappings.map(n => n.findChildElement('midi-unpitched')!.innerText).sort()).toEqual(['38','39','41','50']);
+        const notes = doc.firstElement!.findChildElement('part')!.firstElement!.childElements().filter(n => n.localName === 'note');
+        expect(notes).toHaveLength(5);
+        expect(notes.map(n => n.findChildElement('duration')!.innerText)).toEqual(['960','960','960','960','960']);
+        expect(notes[1].findChildElement('chord')).toBeDefined();
+        expect(notes[0].findChildElement('instrument')!.getAttribute('id')).toBe('P1-UnknownPercussion');
+        expect(notes[1].findChildElement('instrument')!.getAttribute('id')).toBe('P1-D40');
     });
 
     it('restores host logging even when parsing fails', async () => {

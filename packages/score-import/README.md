@@ -50,8 +50,9 @@ Generate an original application fixture with `npx tsx scripts/fixture.ts PATH`.
 A private 14-file modern GP corpus currently produces 14 schema-valid MusicXML
 outputs. Twelve match source-model note pitch/onset/duration/voice/tie/fingering
 through MusicMaster's independent timeline parser, excluding diagnosed unresolved
-pitches. Four have no blocking diagnostics. Remaining cases include unknown
-percussion IDs, fractional starting pitches, invalid frets and overfull measures.
+pitches. The original strict baseline had four scores without blocking diagnostics. Remaining blocking cases include fractional starting pitches, invalid frets and
+overfull measures. Unidentified percussion is retained with a warning and no
+MIDI mapping; callers must exclude such entries from playback/practice targets.
 This is a regression baseline, not an import accuracy benchmark or independent
 validation of alphaTab's source interpretation. Third-party scores/outputs are
 kept outside Git.
@@ -78,3 +79,10 @@ scope. P.M./let-ring instructions use words plus standard MusicXML dashes, split
 at measure boundaries, rests, gaps and changes of affected strings. Partial
 chords name affected strings. These visual instructions do not apply audio DSP;
 renderers that ignore direction dashes need their own drawing support.
+
+Since 0.1.5, unresolved percussion alone no longer blocks practice admission.
+Its explicit unmapped instrument reference and generic G5 display position
+preserve the source rhythm without assigning a drum sound. The consumer must
+filter these entries from playback and scoring requirements; valid drum hits
+and other notes in mixed chords remain intact. Original bytes remain with the
+consumer for recovery and later converter improvements.

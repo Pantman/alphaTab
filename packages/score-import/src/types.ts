@@ -34,7 +34,7 @@ export interface ImportedScore {
     musicXml: string;
     metadata: ImportedScoreMetadata;
     diagnostics: ImportDiagnostic[];
-    /** False means at least one musical construct could not be represented faithfully. */
+    /** False means a blocking musical construct remains. Warnings may include deliberately silent unidentified percussion. */
     practiceReady: boolean;
     provenance: {
         schema: 'score-import.provenance.v1';

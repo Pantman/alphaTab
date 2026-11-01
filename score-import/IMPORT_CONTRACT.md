@@ -77,3 +77,14 @@ affected strings rather than implying the entire chord. Single notes retain an
 instruction; before-beat grace instructions do not extend into main-note spans.
 Lyrics are emitted once per chord with verse numbers and escaped text. These
 notation additions do not change pitch, duration, practice targets or audio DSP.
+
+## Unidentified percussion
+
+An unpitched percussion entry without a resolved MIDI identity remains in
+MusicXML at its original onset/duration, with an explicit score-instrument ID
+that has no midi-instrument mapping. Emit `unresolved-percussion` as a warning;
+the generic G5/top-line notehead is a visual placeholder, never an inferred drum.
+Consumers must omit these entries from playback and scoring targets while
+retaining their rhythm/notation and valid hits in the same part or chord.
+User comparison found Ultimate Guitar and MuseScore display these entries;
+the user reports MuseScore produces no sound. No default drum mapping is assumed.
