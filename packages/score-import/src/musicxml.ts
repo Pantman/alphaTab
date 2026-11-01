@@ -115,7 +115,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                 // A sound-only direction still needs a direction-type. Empty words
                 // are valid MusicXML and avoid engraving generated ramp labels.
                 const mark = tempo.visible ? `<metronome><beat-unit>quarter</beat-unit>${element('per-minute', tempo.value)}</metronome>` : '<words/>';
-                body += `<direction><direction-type>${mark}</direction-type>${element('offset', tempo.offset)}<sound tempo="${tempo.value}"/></direction>`;
+                body += `<direction><direction-type>${mark}</direction-type><offset sound="yes">${tempo.offset}</offset><sound tempo="${tempo.value}"/></direction>`;
             }
             if (master.isRepeatStart) body += '<barline location="left"><repeat direction="forward"/></barline>';
             const ending = master.alternateEndings;

@@ -112,7 +112,8 @@ its next point, following Guitar Pro's [Progressive to the Next Point](https://w
 semantics. They become hidden MusicXML sound directions, with sample intervals
 at most 1/32 quarter note and 0.25 BPM. Midpoint switches approximate the linear
 BPM curve while retaining authored values/positions and visible metronome marks.
-A final progressive point holds its value. Original automation remains in raw
+Playback offsets explicitly use MusicXML `sound="yes"`; otherwise MusicXML
+defaults them to visual offsets only. A final progressive point holds its value. Original automation remains in raw
 metadata. More than 4096 generated samples blocks practice rather than silently
 flattening a ramp. Generate the original independent two-part study with
 `npx tsx scripts/tempo-ramp-fixture.ts PATH`.

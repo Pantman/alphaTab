@@ -84,7 +84,7 @@ describe('progressive Guitar Pro tempo conversion', () => {
         expect(imported.musicXml.match(/<note>/g)?.length).toBe(5);
         expect(imported.musicXml.match(/<metronome>/g)?.length).toBe(3);
         expect(imported.musicXml.match(/<words\/>/g)?.length).toBe(128);
-        expect(imported.musicXml).toContain('<offset>15</offset><sound tempo="127.75"/>');
+        expect(imported.musicXml).toContain('<offset sound="yes">15</offset><sound tempo="127.75"/>');
         expect(imported.diagnostics.some(d => d.code === 'linear-tempo-sampled')).toBe(true);
     });
 });
