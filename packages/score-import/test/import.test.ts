@@ -176,6 +176,16 @@ describe('score-import', () => {
         expect(summary(output)).toEqual(summary(source.score));
     });
 
+    it('retains quarter-tone bend continuations with exact starting pitch, tie and pre-bend metadata', async () => {
+        const result = await importScore(makeGp('. :4 3.6{b (0 1)} -.6{b (1 0)} 0.6 0.6'));
+        expect(result.practiceReady).toBe(true);
+        expect(result.diagnostics).toContainEqual(expect.objectContaining({code: 'fractional-bend-start', severity: 'warning'}));
+        expect(result.musicXml).toContain('<alter>0.5</alter>');
+        expect(result.musicXml).toContain('<bend-alter>0.5</bend-alter><pre-bend/>');
+        expect(result.musicXml).toContain('<tie type="stop"/>');
+        expect(result.musicXml).toContain('<release/>');
+    });
+
     it('preserves percussion MIDI identity independently of its staff position', async () => {
         const result = await importScore(makeGp('\\instrument "percussion" . :4 30 31 33 34'));
         expect(result.practiceReady).toBe(true);

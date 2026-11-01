@@ -98,3 +98,11 @@ technique glyphs and exact SMuFL stylistic variants are not reproduced.
 Version 0.1.7 also maps heavy/ornate X source heads (including China/crash
 cymbals) to MusicXML X semantics. Exact glyph weight and hat styling remain
 renderer-dependent; these entries must not fall back to round heads.
+
+Since 0.1.8, a fractional starting pitch from a resolved guitar bend is retained
+with a `fractional-bend-start` warning. The MusicXML pitch remains exact and its
+pre-bend records the offset from an integer fret-pitch anchor, including inherited
+holds. Consumers must preserve that offset for playback; an integer MIDI key
+alone is insufficient. Practice may use the fret-pitch anchor, but must not claim
+to assess bend intonation. Other fractional pitches remain blocking errors.
+Generate the original study with `npx tsx scripts/fractional-bend-fixture.ts PATH`.

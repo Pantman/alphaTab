@@ -180,7 +180,11 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     const previousPoints = note.bendOrigin?.bendPoints;
     const initialBend = note.bendPoints?.[0]?.value ?? (previousPoints?.[previousPoints.length - 1]?.value ?? 0);
     const soundingPitch = note.realValue + initialBend / 2;
-    if (!note.isPercussion && !Number.isInteger(soundingPitch)) report('error', 'microtonal-start', 'A fractional-semitone starting pitch is preserved in MusicXML but cannot yet be used for MIDI practice targets.', partId, measure);
+    if (!note.isPercussion && !Number.isInteger(soundingPitch)) {
+        if (note.isStringed && validMidi(note.realValue) && initialBend !== 0) {
+            report('warning', 'fractional-bend-start', 'A fractional guitar bend start is preserved in MusicXML; playback needs its pitch offset above an integer fret-pitch anchor. Practice does not judge bend intonation.', partId, measure);
+        } else report('error', 'microtonal-start', 'A fractional-semitone starting pitch without a resolved guitar bend cannot yet be used for MIDI practice targets.', partId, measure);
+    }
     let body = grace ? `<grace${beat.graceType === GraceType.BeforeBeat ? ' slash="yes"' : ''}/>` : '';
     if (chord) body += '<chord/>';
     if (note.isPercussion) {
@@ -226,8 +230,8 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
         technical += `<${tag} number="${Math.max(1, note.string)}" type="stop"/>`;
     }
     const points = note.bendPoints;
+    if (initialBend) technical += `<bend><bend-alter>${initialBend / 2}</bend-alter><pre-bend/></bend>`;
     if (points?.length) {
-        if (initialBend) technical += `<bend><bend-alter>${initialBend / 2}</bend-alter><pre-bend/></bend>`;
         for (let i = 1; i < points.length; i++) {
             const a = points[i - 1], b = points[i];
             const delta = (b.value - a.value) / 2;
