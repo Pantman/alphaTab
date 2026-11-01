@@ -16,6 +16,7 @@ import { planBeams } from './beaming';
 import { planInstructions } from './instructions';
 import { planTempos } from './tempos';
 import { planVibratos } from './vibrato';
+import type { BendPerformance } from './bendPerformance';
 import { percussionNotehead } from './percussionNoteheads';
 
 const divisions = MidiUtils.QuarterTime;
@@ -42,7 +43,7 @@ function numbersFromMask(mask: number): string {
     return Array.from({ length: 8 }, (_, i) => i + 1).filter(n => mask & (1 << (n - 1))).join(',');
 }
 
-export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): string {
+export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[], bends = new WeakMap<Note, BendPerformance>()): string {
     const seen = new Set<string>();
     const report = (severity: ImportDiagnostic['severity'], code: string, message: string, partId?: string, measure?: number) => {
         const key = `${code}:${partId ?? ''}:${measure ?? ''}`;
@@ -157,7 +158,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                         }
                         body += instructions?.get(beat)?.before ?? '';
                         if (beat.isRest) body += `<note><rest/>${element('duration', beat.displayDuration)}${element('voice', voiceNumber)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}${element('staff', s + 1)}${vibratos.has(beat) ? `<notations>${vibratos.get(beat)}</notations>` : ''}</note>`;
-                        else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report, n === 0 ? beams.get(beat) ?? '' : '', n === 0 ? vibratos.get(beat) ?? '' : ''); });
+                        else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report, n === 0 ? beams.get(beat) ?? '' : '', n === 0 ? vibratos.get(beat) ?? '' : '', bends.get(note)); });
                         body += instructions?.get(beat)?.after ?? '';
                         if (!grace) position = Math.max(position, beat.displayStart + beat.displayDuration);
                     }
@@ -180,7 +181,7 @@ function timeModification(beat: Beat): string {
 
 type Report = (severity: ImportDiagnostic['severity'], code: string, message: string, partId?: string, measure?: number) => void;
 
-function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, voice: number, chord: boolean, partId: string, measure: number, report: Report, beams: string, vibrato: string): string {
+function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, voice: number, chord: boolean, partId: string, measure: number, report: Report, beams: string, vibrato: string, performance?: BendPerformance): string {
     const grace = beat.graceType !== GraceType.None;
     // MusicXML prebends describe the approach to the starting pitch. The pitch itself must already include it.
     const previousPoints = note.bendOrigin?.bendPoints;
@@ -266,5 +267,6 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     if (!chord) beat.lyrics?.forEach((text, verse) => {
         if (text) body += `<lyric number="${verse + 1}">${element('text', text)}</lyric>`;
     });
+    if (performance) body += `<play><other-play type="musicmaster:bend-curve-v1">${xmlText(JSON.stringify(performance))}</other-play></play>`;
     return `<note>${body}</note>`;
 }

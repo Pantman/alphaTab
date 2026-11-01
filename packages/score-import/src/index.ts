@@ -41,9 +41,9 @@ export async function importScore(input: Uint8Array, _options: ImportOptions = {
             parser.parseXml(gpif, settings);
         } finally { Logger.log = previousLogger; Logger.logLevel = previousLevel; }
         const score = parser.score;
-        const { metadata, version } = sourceMetadata(gpif, score);
+        const { metadata, version, bends } = sourceMetadata(gpif, score, diagnostics);
         diagnostics.push({ severity: 'warning', code: 'source-audio-unapplied', message: 'Original instrument and effect settings are preserved as metadata; only standard MIDI defaults are written to MusicXML.' });
-        const musicXml = writeMusicXml(score, diagnostics);
+        const musicXml = writeMusicXml(score, diagnostics, bends);
         const hash = await crypto.subtle.digest('SHA-256', bytes.buffer);
         return { musicXml, metadata, diagnostics, practiceReady: !diagnostics.some(d => d.severity === 'error'),
             provenance: { schema: 'score-import.provenance.v1', format: 'gp', sourceVersion: version,

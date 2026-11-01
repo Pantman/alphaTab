@@ -125,3 +125,16 @@ remain unslurred. A tied fret starting a slide gets courtesy parentheses without
 changing source ghost-note dynamics. Vibrato audio/DSP and slide pitch motion
 remain diagnosed limitations. Generate the independent held-bend study with
 `npx tsx scripts/held-bend-fixture.ts PATH`.
+
+Since 0.1.11, the original GPIF bend control points are retained independently
+of model simplification. Each affected note carries relative pitch/time points
+in MusicXML `play/other-play type="musicmaster:bend-curve-v1"` JSON. The first
+pitch is zero relative to the written sounding start (including pre-bends).
+Points preserve intermediate holds, zero-valued dips, and fractional timing;
+compact standard bend notation remains available to other readers. Consumers
+should prefer valid performance points for audio while retaining standard bends
+for engraving. Inactive middle handles outside the active endpoints are omitted. Malformed or
+unmatchable curves warn and retain the standard bend fallback.
+This does not prescribe an easing curve between points or claim to reproduce
+another player's proprietary interpolation. Generate the independent study with
+`npx tsx scripts/bend-performance-fixture.ts PATH`.

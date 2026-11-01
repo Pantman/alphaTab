@@ -3,7 +3,9 @@ import type { Score } from '@coderline/alphatab/model/Score';
 import { XmlDocument } from '@coderline/alphatab/xml/XmlDocument';
 import type { XmlNode } from '@coderline/alphatab/xml/XmlNode';
 import type { ImportedScoreMetadata, SourceElement } from './types';
-import { ScoreImportError } from './types';
+import { ScoreImportError, type ImportDiagnostic } from './types';
+import { sourceBendPerformance, type BendPerformance } from './bendPerformance';
+import type { Note } from '@coderline/alphatab/model/Note';
 
 function preserve(node: XmlNode, depth = 0): SourceElement {
     if (depth > 64) throw new ScoreImportError('metadata-depth', 'Source metadata is too deeply nested.');
@@ -12,7 +14,7 @@ function preserve(node: XmlNode, depth = 0): SourceElement {
 }
 
 /** Extract before conversion: alphaTab intentionally does not model full RSE chains. */
-export function sourceMetadata(xml: string, score: Score): { metadata: ImportedScoreMetadata; version: string } {
+export function sourceMetadata(xml: string, score: Score, diagnostics: ImportDiagnostic[] = []): { metadata: ImportedScoreMetadata; version: string; bends: WeakMap<Note, BendPerformance> } {
     const doc = new XmlDocument();
     doc.parse(xml);
     const root = doc.firstElement;
@@ -37,5 +39,5 @@ export function sourceMetadata(xml: string, score: Score): { metadata: ImportedS
         }),
         master: root.childElements().filter(child => child.localName === 'MasterTrack' || child.localName === 'BackingTrack').map(child => preserve(child))
     };
-    return { metadata, version: root.findChildElement('GPVersion')?.innerText || 'unknown' };
+    return { metadata, version: root.findChildElement('GPVersion')?.innerText || 'unknown', bends: sourceBendPerformance(root, score, diagnostics) };
 }
