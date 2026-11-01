@@ -33,9 +33,23 @@ describe('held bend and slide notation', () => {
         // Three vibrating beats form one span ending at the final plain control.
         expect(imported.practiceReady).toBe(true);
         expect(imported.musicXml.match(/<ornaments>/g)?.length).toBe(2);
-        expect(imported.musicXml.match(/<wavy-line type="start"\/>/g)?.length).toBe(1);
-        expect(imported.musicXml.match(/<wavy-line type="stop"\/>/g)?.length).toBe(1);
+        expect(imported.musicXml.match(/<wavy-line type="start"[^>]*\/>/g)?.length).toBe(1);
+        expect(imported.musicXml.match(/<wavy-line type="stop"[^>]*\/>/g)?.length).toBe(1);
         expect(imported.musicXml).not.toContain('trill-mark');
         expect(imported.diagnostics.some(d => d.code === 'note-performance')).toBe(true);
     });
+    it('closes vibrato at rests and preserves terminal beat durations without adding notes', async () => {
+        const rest = await convert('. :2 5.4{v} r');
+        expect(rest.musicXml).toMatch(/<note><rest\/>.*?<ornaments><wavy-line type="stop"/);
+        const end = await convert('. :2 5.4{v} 7.4{v}');
+        expect(end.musicXml.match(/<note>/g)?.length).toBe(2);
+        expect(end.musicXml.match(/<wavy-line type="start"/g)?.length).toBe(2);
+        expect(end.musicXml.match(/<wavy-line type="stop"/g)?.length).toBe(2);
+    });
+    it('numbers simultaneous voices independently', async () => {
+        const imported = await convert(String.raw`\voice . :2 5.4{v} 5.4 \voice :2 7.3{v} 7.3`);
+        expect(imported.musicXml).toContain('<wavy-line type="start" number="1"/>');
+        expect(imported.musicXml).toContain('<wavy-line type="start" number="2"/>');
+    });
+
 });

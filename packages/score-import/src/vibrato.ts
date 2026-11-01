@@ -9,7 +9,7 @@ import type { Track } from '@coderline/alphatab/model/Track';
  */
 export function planVibratos(track: Track): Map<Beat, string> {
     const marks = new Map<Beat, string>();
-    const add = (beat: Beat, type: string) => marks.set(beat, (marks.get(beat) ?? '') + `<wavy-line type="${type}"/>`);
+    const add = (beat: Beat, type: string) => marks.set(beat, (marks.get(beat) ?? '') + `<wavy-line type="${type}" number="${beat.voice.index + 1}"/>`);
     const active = (beat: Beat) => !beat.isRest && !!(beat.vibrato || beat.notes.some(note => note.vibrato));
     const start = (beat: Beat) => beat.voice.bar.masterBar.start + beat.displayStart;
     const adjacent = (first: Beat, last: Beat) => Math.abs(start(first) + first.displayDuration - start(last)) < 1e-6;
