@@ -138,3 +138,12 @@ unmatchable curves warn and retain the standard bend fallback.
 This does not prescribe an easing curve between points or claim to reproduce
 another player's proprietary interpolation. Generate the independent study with
 `npx tsx scripts/bend-performance-fixture.ts PATH`.
+
+Since 0.1.12, per-note `play/other-play type="musicmaster:vibrato-v1"` JSON
+retains a `layers` array with `kind` (`finger` or `bar`) and `strength` (`slight`
+or `wide`). Finger markings retain their individual chord-string scope; bar
+markings apply to all notes of the beat. Bend and vibrato metadata share one
+standard `play` element. These source categories do not specify exact frequency,
+depth or waveform; those remain consumer playback policy. Ordinary wavy-line
+notation is unchanged. Generate the independent study with
+`npx tsx scripts/vibrato-fixture.ts PATH`.

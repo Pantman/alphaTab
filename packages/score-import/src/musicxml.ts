@@ -267,6 +267,12 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     if (!chord) beat.lyrics?.forEach((text, verse) => {
         if (text) body += `<lyric number="${verse + 1}">${element('text', text)}</lyric>`;
     });
-    if (performance) body += `<play><other-play type="musicmaster:bend-curve-v1">${xmlText(JSON.stringify(performance))}</other-play></play>`;
+    let playback = performance ? `<other-play type="musicmaster:bend-curve-v1">${xmlText(JSON.stringify(performance))}</other-play>` : '';
+    const vibratoLayers = [
+        ...(note.vibrato ? [{kind: 'finger', strength: note.vibrato === 2 ? 'wide' : 'slight'}] : []),
+        ...(beat.vibrato ? [{kind: 'bar', strength: beat.vibrato === 2 ? 'wide' : 'slight'}] : []),
+    ];
+    if (vibratoLayers.length) playback += `<other-play type="musicmaster:vibrato-v1">${xmlText(JSON.stringify({layers: vibratoLayers}))}</other-play>`;
+    if (playback) body += `<play>${playback}</play>`;
     return `<note>${body}</note>`;
 }
