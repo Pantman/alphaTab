@@ -13,6 +13,7 @@ import type { ImportDiagnostic } from './types';
 import { ScoreImportError } from './types';
 import { planBeams } from './beaming';
 import { planInstructions } from './instructions';
+import { planTempos } from './tempos';
 import { percussionNotehead } from './percussionNoteheads';
 
 const divisions = MidiUtils.QuarterTime;
@@ -67,6 +68,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
         return `<score-part id="${id}">${element('part-name', track.name || `Track ${t + 1}`)}${instruments}${midiInstruments}</score-part>`;
     }).join('');
 
+    const tempos = planTempos(score, diagnostics);
     const parts = score.tracks.map((track, t) => {
         const partId = `P${t + 1}`;
         let previousDynamic = -1;
@@ -109,11 +111,12 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                 if (staff.capo > 0 && !staff.isPercussion) body += `<direction><direction-type>${element('words', `Capo ${staff.capo}`)}</direction-type>${element('staff', s + 1)}</direction>`;
             });
             if (master.section) body += `<direction><direction-type>${element('rehearsal', master.section.text)}</direction-type></direction>`;
-            for (const tempo of master.tempoAutomations) {
-                if (tempo.isLinear) report('error', 'linear-tempo', 'Continuous tempo ramps are not yet converted.', partId, measure);
-                body += `<direction><direction-type><metronome><beat-unit>quarter</beat-unit>${element('per-minute', tempo.value)}</metronome></direction-type>${element('offset', Math.round(tempo.ratioPosition * duration))}<sound tempo="${tempo.value}"/></direction>`;
+            for (const tempo of tempos[m]) {
+                // A sound-only direction still needs a direction-type. Empty words
+                // are valid MusicXML and avoid engraving generated ramp labels.
+                const mark = tempo.visible ? `<metronome><beat-unit>quarter</beat-unit>${element('per-minute', tempo.value)}</metronome>` : '<words/>';
+                body += `<direction><direction-type>${mark}</direction-type>${element('offset', tempo.offset)}<sound tempo="${tempo.value}"/></direction>`;
             }
-            if (m === 0 && !master.tempoAutomations.length) body += `<direction><direction-type><metronome><beat-unit>quarter</beat-unit>${element('per-minute', score.tempo)}</metronome></direction-type><sound tempo="${score.tempo}"/></direction>`;
             if (master.isRepeatStart) body += '<barline location="left"><repeat direction="forward"/></barline>';
             const ending = master.alternateEndings;
             if (ending && ending !== score.masterBars[m - 1]?.alternateEndings) body += `<barline location="left"><ending number="${numbersFromMask(ending)}" type="start"/></barline>`;
