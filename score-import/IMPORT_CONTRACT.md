@@ -96,3 +96,7 @@ and ghost parentheses. Unsupported symbols emit `percussion-notehead` warnings
 and use normal heads. Shape and staff position never determine MIDI identity;
 unidentified entries retain their generic silent placeholder. Additional
 technique glyphs and exact SMuFL stylistic variants are not reproduced.
+
+Version 0.1.7 also maps heavy/ornate X source heads (including China/crash
+cymbals) to MusicXML X semantics. Exact glyph weight and hat styling remain
+renderer-dependent; these entries must not fall back to round heads.

@@ -10,6 +10,10 @@ export function percussionNotehead(symbol: Symbol): { value: string; filled?: bo
         case Symbol.NoteheadDoubleWhole:
         case Symbol.NoteheadDoubleWholeSquare: return { value: 'normal', filled: false };
         case Symbol.NoteheadNull: return { value: 'none' };
+        // MusicXML's X semantics also cover heavy/ornate source glyph variants.
+        case Symbol.NoteheadHeavyX:
+        case Symbol.NoteheadHeavyXHat:
+        case Symbol.NoteheadXOrnate:
         case Symbol.NoteheadXBlack:
         case Symbol.NoteheadXHalf:
         case Symbol.NoteheadXWhole:

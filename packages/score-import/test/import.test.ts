@@ -204,6 +204,10 @@ describe('score-import', () => {
         expect(heads.map(h => h.innerText)).toEqual(['diamond', 'diamond', 'x', 'circle-x']);
         expect(heads[1].getAttribute('parentheses')).toBe('yes');
         expect(varied.diagnostics.some(d => d.code === 'percussion-notehead')).toBe(false);
+        const heavy = await importScore(rewriteGp(makeGp('\\instrument "percussion" . :4 30 :2 30'), xml => xml
+            .replace(/<Noteheads>[^<]+<\/Noteheads>/, '<Noteheads>noteheadHeavyX noteheadHeavyXHat noteheadXOrnate</Noteheads>')));
+        expect(heavy.musicXml.match(/>x<\/notehead>/g)).toHaveLength(2);
+        expect(heavy.diagnostics.some(d => d.code === 'percussion-notehead')).toBe(false);
     });
 
     it('retains silent unknown percussion while still blocking invalid frets', async () => {

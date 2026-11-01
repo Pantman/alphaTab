@@ -1,6 +1,6 @@
 {
   "name": "@pantman/score-import",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Headless Guitar Pro to MusicXML conversion with source metadata and diagnostics",
   "type": "module",
   "license": "MPL-2.0",
