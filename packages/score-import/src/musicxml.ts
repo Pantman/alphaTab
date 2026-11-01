@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import { MidiUtils } from '@coderline/alphatab/midi/MidiUtils';
 import { AutomationType } from '@coderline/alphatab/model/Automation';
+import { SlideOutType } from '@coderline/alphatab/model/SlideOutType';
 import { GraceType } from '@coderline/alphatab/model/GraceType';
 import type { Beat } from '@coderline/alphatab/model/Beat';
 import type { Note } from '@coderline/alphatab/model/Note';
@@ -14,6 +15,7 @@ import { ScoreImportError } from './types';
 import { planBeams } from './beaming';
 import { planInstructions } from './instructions';
 import { planTempos } from './tempos';
+import { planVibratos } from './vibrato';
 import { percussionNotehead } from './percussionNoteheads';
 
 const divisions = MidiUtils.QuarterTime;
@@ -72,6 +74,7 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
     const parts = score.tracks.map((track, t) => {
         const partId = `P${t + 1}`;
         let previousDynamic = -1;
+        const vibratos = planVibratos(track);
         const measures = score.masterBars.map((master, m) => {
             const measure = m + 1;
             const duration = master.calculateDuration();
@@ -153,8 +156,8 @@ export function writeMusicXml(score: Score, diagnostics: ImportDiagnostic[]): st
                             previousDynamic = beat.dynamics;
                         }
                         body += instructions?.get(beat)?.before ?? '';
-                        if (beat.isRest) body += `<note><rest/>${element('duration', beat.displayDuration)}${element('voice', voiceNumber)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}${element('staff', s + 1)}</note>`;
-                        else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report, n === 0 ? beams.get(beat) ?? '' : ''); });
+                        if (beat.isRest) body += `<note><rest/>${element('duration', beat.displayDuration)}${element('voice', voiceNumber)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}${element('staff', s + 1)}${vibratos.has(beat) ? `<notations>${vibratos.get(beat)}</notations>` : ''}</note>`;
+                        else beat.notes.forEach((note, n) => { body += writeNote(note, beat, staff, s + 1, voiceNumber, n > 0, partId, measure, report, n === 0 ? beams.get(beat) ?? '' : '', n === 0 ? vibratos.get(beat) ?? '' : ''); });
                         body += instructions?.get(beat)?.after ?? '';
                         if (!grace) position = Math.max(position, beat.displayStart + beat.displayDuration);
                     }
@@ -177,7 +180,7 @@ function timeModification(beat: Beat): string {
 
 type Report = (severity: ImportDiagnostic['severity'], code: string, message: string, partId?: string, measure?: number) => void;
 
-function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, voice: number, chord: boolean, partId: string, measure: number, report: Report, beams: string): string {
+function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, voice: number, chord: boolean, partId: string, measure: number, report: Report, beams: string, vibrato: string): string {
     const grace = beat.graceType !== GraceType.None;
     // MusicXML prebends describe the approach to the starting pitch. The pitch itself must already include it.
     const previousPoints = note.bendOrigin?.bendPoints;
@@ -210,9 +213,12 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     const art = note.isPercussion ? PercussionMapper.getArticulation(note) : undefined;
     const head = art ? percussionNotehead(art.getSymbol(beat.duration)) : undefined;
     if (art && !head) report('warning', 'percussion-notehead', 'A source percussion notehead has no supported MusicXML equivalent; a normal head is used.', partId, measure);
-    if (head || note.isDead || note.isGhost) {
+    // A sustained fret becomes a useful courtesy anchor when a new slide
+    // starts there. Parentheses describe engraving, not ghost-note dynamics.
+    const courtesyFret = note.isStringed && note.isTieDestination && !!note.slideTarget;
+    if (head || note.isDead || note.isGhost || courtesyFret) {
         const value = head?.value ?? (note.isDead && !note.isPercussion ? 'x' : 'normal');
-        body += `<notehead${head?.filled !== undefined ? ` filled="${head.filled ? 'yes' : 'no'}"` : ''}${note.isGhost ? ' parentheses="yes"' : ''}>${value}</notehead>`;
+        body += `<notehead${head?.filled !== undefined ? ` filled="${head.filled ? 'yes' : 'no'}"` : ''}${note.isGhost || courtesyFret ? ' parentheses="yes"' : ''}>${value}</notehead>`;
     }
     body += element('staff', staffNumber) + beams;
     let technical = '';
@@ -249,10 +255,13 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     let slides = '';
     if (note.slideOrigin) slides += `<slide type="stop" number="${slideNumber}"/>`;
     if (note.slideTarget) slides += `<slide type="start" number="${slideNumber}"/>`;
+    // A shift slide is picked; a legato slide also carries its curved slur.
+    if (note.slideOrigin?.slideOutType === SlideOutType.Legato) slides += `<slur type="stop" number="${slideNumber}"/>`;
+    if (note.slideTarget && note.slideOutType === SlideOutType.Legato) slides += `<slur type="start" number="${slideNumber}"/>`;
     if (note.slideInType || (note.slideOutType && !note.slideTarget)) report('warning', 'unconnected-slide', 'An unconnected slide is preserved in the original file but not yet converted.', partId, measure);
     const articulation = note.accentuated === 1 ? '<accent/>' : note.accentuated === 2 ? '<strong-accent/>' : note.accentuated === 3 ? '<tenuto/>' : '';
     const articulations = articulation + (note.isStaccato ? '<staccato/>' : '');
-    body += `<notations>${tied}${slides}${articulations ? `<articulations>${articulations}</articulations>` : ''}${technical ? `<technical>${technical}</technical>` : ''}</notations>`;
+    body += `<notations>${tied}${slides}${vibrato}${articulations ? `<articulations>${articulations}</articulations>` : ''}${technical ? `<technical>${technical}</technical>` : ''}</notations>`;
     if (note.isPalmMute || note.isLetRing || note.vibrato || note.trillValue >= 0) report('warning', 'note-performance', 'Palm mute, let ring, vibrato or trill playback needs application interpretation.', partId, measure);
     if (!chord) beat.lyrics?.forEach((text, verse) => {
         if (text) body += `<lyric number="${verse + 1}">${element('text', text)}</lyric>`;

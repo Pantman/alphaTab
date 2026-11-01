@@ -117,3 +117,11 @@ defaults them to visual offsets only. A final progressive point holds its value.
 metadata. More than 4096 generated samples blocks practice rather than silently
 flattening a ramp. Generate the original independent two-part study with
 `npx tsx scripts/tempo-ramp-fixture.ts PATH`.
+
+Since 0.1.10, adjacent vibrating beats carry a continuous standard MusicXML wavy line,
+including tied continuations across bars (one per chord/voice).
+Legato slides retain both their straight slide and curved slur; shift slides
+remain unslurred. A tied fret starting a slide gets courtesy parentheses without
+changing source ghost-note dynamics. Vibrato audio/DSP and slide pitch motion
+remain diagnosed limitations. Generate the independent held-bend study with
+`npx tsx scripts/held-bend-fixture.ts PATH`.
