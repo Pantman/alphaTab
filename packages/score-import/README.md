@@ -86,3 +86,11 @@ preserve the source rhythm without assigning a drum sound. The consumer must
 filter these entries from playback and scoring requirements; valid drum hits
 and other notes in mixed chords remain intact. Original bytes remain with the
 consumer for recovery and later converter improvements.
+
+Since 0.1.6, percussion notehead shapes come from the resolved source articulation,
+including its half/whole-duration variants. MusicXML carries X, circle-X, diamond,
+triangle, normal and supported slashed heads, explicit hollow/filled appearance
+and ghost parentheses. Unsupported symbols emit `percussion-notehead` warnings
+and use normal heads. Shape and staff position never determine MIDI identity;
+unidentified entries retain their generic silent placeholder. Additional
+technique glyphs and exact SMuFL stylistic variants are not reproduced.

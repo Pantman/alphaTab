@@ -184,6 +184,28 @@ describe('score-import', () => {
         expect(readOutput(result.musicXml).tracks[0].staves[0].bars[0].voices[0].beats.map(b => b.notes[0].realValue)).toEqual([49, 40, 37, 38]);
     });
 
+    it('preserves source cymbal shapes and fill independently of MIDI and ghost parentheses', async () => {
+        const input = rewriteGp(makeGp('\\instrument "percussion" . :4 30 31 33 34'), xml => xml
+            .replace(/<Noteheads>[^<]+<\/Noteheads>/, '<Noteheads>noteheadDiamondWhite noteheadXHalf noteheadCircleX</Noteheads>'));
+        const result = await importScore(input);
+        const doc = new XmlDocument(); doc.parse(result.musicXml);
+        const notes = doc.firstElement!.findChildElement('part')!.firstElement!.childElements().filter(n => n.localName === 'note');
+        expect(notes[0].findChildElement('notehead')!.innerText).toBe('diamond');
+        expect(notes[0].findChildElement('notehead')!.getAttribute('filled')).toBe('no');
+        expect(readOutput(result.musicXml).tracks[0].staves[0].bars[0].voices[0].beats.map(b => b.notes[0].realValue)).toEqual([49, 40, 37, 38]);
+        const crash = await importScore(makeGp('\\instrument "percussion" . :4 30{g} 30 :2 30'));
+        expect(crash.musicXml).toMatch(/<notehead[^>]*parentheses="yes"[^>]*>x<\/notehead>/);
+        expect(crash.musicXml.match(/>x<\/notehead>/g)).toHaveLength(3);
+        const varied = await importScore(rewriteGp(makeGp('\\instrument "percussion" . :4 30 30{g} :2 30 | :1 30'), xml => xml
+            .replace(/<Noteheads>[^<]+<\/Noteheads>/, '<Noteheads>noteheadDiamondWhite noteheadXHalf noteheadCircleX</Noteheads>')));
+        const variedDoc = new XmlDocument(); variedDoc.parse(varied.musicXml);
+        const heads = variedDoc.firstElement!.findChildElement('part')!.childElements()
+            .flatMap(m => m.childElements().filter(n => n.localName === 'note').map(n => n.findChildElement('notehead')!));
+        expect(heads.map(h => h.innerText)).toEqual(['diamond', 'diamond', 'x', 'circle-x']);
+        expect(heads[1].getAttribute('parentheses')).toBe('yes');
+        expect(varied.diagnostics.some(d => d.code === 'percussion-notehead')).toBe(false);
+    });
+
     it('retains silent unknown percussion while still blocking invalid frets', async () => {
         const percussion = rewriteGp(makeGp('\\instrument "percussion" . 30'), xml => xml.replace(/<InstrumentArticulation>\d+<\/InstrumentArticulation>/g, '<InstrumentArticulation>-1</InstrumentArticulation>'));
         const drumResult = await importScore(percussion);

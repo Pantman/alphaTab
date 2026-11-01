@@ -13,6 +13,7 @@ import type { ImportDiagnostic } from './types';
 import { ScoreImportError } from './types';
 import { planBeams } from './beaming';
 import { planInstructions } from './instructions';
+import { percussionNotehead } from './percussionNoteheads';
 
 const divisions = MidiUtils.QuarterTime;
 const noteTypes: Record<number, string> = { [-4]: 'long', [-2]: 'breve', 1: 'whole', 2: 'half', 4: 'quarter', 8: 'eighth',
@@ -199,7 +200,13 @@ function writeNote(note: Note, beat: Beat, staff: Staff, staffNumber: number, vo
     if (note.isTieOrigin) body += '<tie type="start"/>';
     if (!noteTypes[beat.duration]) throw new ScoreImportError('unsupported-duration', 'Unknown written note duration.');
     body += `<instrument id="${partId}-${note.isPercussion ? percussionId(note.realValue) : 'I'}"/>${element('voice', voice)}${element('type', noteTypes[beat.duration])}${'<dot/>'.repeat(beat.dots)}${timeModification(beat)}`;
-    if (note.isDead || note.isGhost) body += `<notehead${note.isGhost ? ' parentheses="yes"' : ''}>${note.isDead ? 'x' : 'normal'}</notehead>`;
+    const art = note.isPercussion ? PercussionMapper.getArticulation(note) : undefined;
+    const head = art ? percussionNotehead(art.getSymbol(beat.duration)) : undefined;
+    if (art && !head) report('warning', 'percussion-notehead', 'A source percussion notehead has no supported MusicXML equivalent; a normal head is used.', partId, measure);
+    if (head || note.isDead || note.isGhost) {
+        const value = head?.value ?? (note.isDead && !note.isPercussion ? 'x' : 'normal');
+        body += `<notehead${head?.filled !== undefined ? ` filled="${head.filled ? 'yes' : 'no'}"` : ''}${note.isGhost ? ' parentheses="yes"' : ''}>${value}</notehead>`;
+    }
     body += element('staff', staffNumber) + beams;
     let technical = '';
     if (note.isStringed && !note.isPercussion) {

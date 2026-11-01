@@ -88,3 +88,11 @@ Consumers must omit these entries from playback and scoring targets while
 retaining their rhythm/notation and valid hits in the same part or chord.
 User comparison found Ultimate Guitar and MuseScore display these entries;
 the user reports MuseScore produces no sound. No default drum mapping is assumed.
+
+Since 0.1.6, percussion notehead shapes come from the resolved source articulation,
+including its half/whole-duration variants. MusicXML carries X, circle-X, diamond,
+triangle, normal and supported slashed heads, explicit hollow/filled appearance
+and ghost parentheses. Unsupported symbols emit `percussion-notehead` warnings
+and use normal heads. Shape and staff position never determine MIDI identity;
+unidentified entries retain their generic silent placeholder. Additional
+technique glyphs and exact SMuFL stylistic variants are not reproduced.
