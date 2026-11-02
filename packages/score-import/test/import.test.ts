@@ -113,6 +113,24 @@ describe('score-import', () => {
         expect(result.diagnostics.some(d => d.code === 'source-audio-unapplied')).toBe(true);
     });
 
+    it('retains authored engine and forced-sound fields without interpreting them', async () => {
+        const input = rewriteGp(makeGp(), xml => {
+            const doc = new XmlDocument(); doc.parse(xml);
+            const track = doc.firstElement!.findChildElement('Tracks')!.firstElement!;
+            for (const [name, value] of [['AudioEngineState', 'MIDI'], ['ForcedSound', '-2']]) {
+                const field = track.findChildElement(name) ?? new XmlNode(XmlNodeType.Element, name);
+                field.innerText = value;
+                if (!track.childElements().includes(field)) track.addChild(field);
+            }
+            return doc.toFormattedString();
+        });
+        const result = await importScore(input);
+        const source = result.metadata.tracks[0].source;
+        expect(source.find(s => s.name === 'AudioEngineState')?.text).toBe('MIDI');
+        expect(source.find(s => s.name === 'ForcedSound')?.text).toBe('-2');
+        expect(result.diagnostics.some(d => d.code === 'source-audio-unapplied')).toBe(true);
+    });
+
     it('is deterministic across repeated imports, independent of alphaTab global note IDs', async () => {
         const bytes = makeGp();
         expect(await importScore(bytes)).toEqual(await importScore(bytes));

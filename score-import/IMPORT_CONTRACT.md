@@ -108,3 +108,12 @@ holds. Consumers must preserve that offset for playback; an integer MIDI key
 alone is insufficient. Practice may use the fret-pitch anchor, but must not claim
 to assess bend intonation. Other fractional pitches remain blocking errors.
 Generate the original study with `npx tsx scripts/fractional-bend-fixture.ts PATH`.
+
+## Authored audio selection metadata (0.1.13)
+
+Retain track `AudioEngineState` and `ForcedSound` along with the sound definitions
+and automations. Effect-chain presence does not establish that RSE was selected.
+Preserve forced-sound sentinel/index values literally; the importer does not
+interpret them or apply sound settings. Older sidecars may lack these fields;
+the original GP bytes permit explicit reimport without silently changing saved
+manual sound choices.

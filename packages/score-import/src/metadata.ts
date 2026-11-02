@@ -27,7 +27,7 @@ export function sourceMetadata(xml: string, score: Score, diagnostics: ImportDia
         throw new ScoreImportError('track-identity', 'Source track identities do not match the parsed score.');
     }
     const retained = new Set(['Sounds', 'RSE', 'Automations', 'GeneralMidi', 'MidiConnection', 'MIDISettings',
-        'PlaybackState', 'Instrument', 'InstrumentSet', 'Properties', 'Staves', 'Transpose', 'PartSounding']);
+        'PlaybackState', 'AudioEngineState', 'ForcedSound', 'Instrument', 'InstrumentSet', 'Properties', 'Staves', 'Transpose', 'PartSounding']);
     const metadata: ImportedScoreMetadata = {
         schema: 'score-import.metadata.v1',
         tracks: score.tracks.map((track, i) => {
